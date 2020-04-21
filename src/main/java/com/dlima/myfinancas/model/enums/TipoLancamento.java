@@ -1,4 +1,4 @@
-package com.dlima.myfinancas.model.entity;
+package com.dlima.myfinancas.model.enums;
 
 public enum TipoLancamento {
 	
