@@ -1,5 +1,7 @@
 package com.dlima.myfinancas.model.repository;
 
+import java.util.Optional;
+
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -30,11 +32,11 @@ public class UsuarioRepositoryTest {
 	@Test
 	public void deveVerificarExistenciaDeEmail() {
 		// cenario
-		Usuario usuario = Usuario.builder().nome("usuario").email("usuario@mail.com").build();
+		Usuario usuario = criarUsuario();
 		entityManager.persist(usuario);
 		
 		// acao/ execucao
-		boolean resultado = repository.existsByEmail("usuario@mail.com");
+		boolean resultado = repository.existsByEmail("usuario@email.com");
 		
 		// verificacao
 		Assertions.assertThat(resultado).isTrue();
@@ -45,10 +47,52 @@ public class UsuarioRepositoryTest {
 		// cenario
 				
 		// acao
-		boolean resultado = repository.existsByEmail("usuario@gmail.com");
+		boolean resultado = repository.existsByEmail("usuario@email.com");
 				
 		// verificacao
 		Assertions.assertThat(resultado).isFalse();
+	}
+	
+	@Test
+	public void devePersistirUmUsuarioNaBaseDeDados() {
+		// cenario
+		Usuario usuario = criarUsuario();
+		
+		// acao
+		Usuario usuarioSalvo = repository.save(usuario);
+		
+		// verificacao
+		Assertions.assertThat(usuarioSalvo.getId()).isNotNull();
+	}
+	
+	@Test
+	public void deveBuscarUmUsuarioPorEmail() {
+		// cenario
+		Usuario usuario = criarUsuario();
+		entityManager.persist(usuario);
+		
+		// verificacao
+		Optional<Usuario> resultado = repository.findByEmail("usuario@email.com");
+		
+		Assertions.assertThat(resultado.isPresent()).isTrue();
+	}
+	
+	@Test
+	public void deveRetornarVazioAoBuscarUsuarioPorEmailQuandoNaoExisteNaBase() {
+		// verificacao
+		Optional<Usuario> resultado = repository.findByEmail("usuario@email.com");
+		
+		Assertions.assertThat(resultado.isPresent()).isFalse();
+	}
+	
+
+	public static Usuario criarUsuario() {
+		return Usuario
+				.builder()
+				.nome("usuario")
+				.email("usuario@email.com")
+				.senha("senha")
+				.build();
 	}
 
 }
