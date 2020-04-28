@@ -3,11 +3,11 @@ package com.dlima.myfinancas.service;
 import java.util.Optional;
 
 import org.assertj.core.api.Assertions;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -21,16 +21,11 @@ import com.dlima.myfinancas.service.impl.UsuarioServiceImpl;
 @ActiveProfiles("test")
 public class UsuarioServiceTest {
 	
-	UsuarioService service;
+	@SpyBean // utiliza metodos originais
+	UsuarioServiceImpl service;
 	
 	@MockBean // criar instancia fake
 	UsuarioRepository repository;
-	
-	@Before // Antes
-	public void setUp() {
-//		repository = Mockito.mock(UsuarioRepository.class); // instancia fake
-		service = new UsuarioServiceImpl(repository); // injetar o mock dentro da classe testada
-	}
 	
 	@Test(expected = Test.None.class) // nao espera excecao
 	public void deveValidarEmail() {
@@ -95,5 +90,43 @@ public class UsuarioServiceTest {
 		); 
 		Assertions.assertThat(excecao).isInstanceOf(ErroAutenticacao.class).hasMessage("Senha inválida.");
 	}
-
+	
+	@Test(expected = Test.None.class)
+	public void deveSalvarUmUsuario() {
+		// cenario
+		Mockito.doNothing().when(service).validarEmail(Mockito.anyString());
+		Usuario usuario = Usuario.builder()
+				.id(1l)
+				.nome("nome")
+				.email("email@email.com")
+				.senha("senha").build();
+		Mockito.when(repository.save(Mockito.any(Usuario.class)))
+				.thenReturn(usuario); // ao salvar qualquer usuario retorna o usuario builder
+		
+		// acao
+		Usuario usuarioSalvo = service.salvarUsuario(new Usuario());
+		
+		//verificacao
+		Assertions.assertThat(usuarioSalvo).isNotNull();
+		Assertions.assertThat(usuarioSalvo.getId()).isEqualTo(1l);
+		Assertions.assertThat(usuarioSalvo.getNome()).isEqualTo("nome");
+		Assertions.assertThat(usuarioSalvo.getEmail()).isEqualTo("email@email.com");
+		Assertions.assertThat(usuarioSalvo.getSenha()).isEqualTo("senha");
+	}
+	
+	@Test(expected = RegraNegocioException.class)
+	public void naoDeveSalvarUmUsuarioComEmailJaCadastrado() {
+		// cenario 
+		String email = "email@email.com";
+		Usuario usuario = Usuario.builder().email(email).build();
+		Mockito.doThrow(RegraNegocioException.class)
+			.when(service).validarEmail(email);
+		
+		// acao
+		service.salvarUsuario(usuario);
+		
+		// verificacao
+		Mockito.verify(repository, Mockito.never()).save(usuario); // espera que nunca tenha sido chamado o metodo de salvar com este usuario
+	}
+	
 }
