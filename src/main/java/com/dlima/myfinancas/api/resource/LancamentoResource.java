@@ -1,7 +1,10 @@
 package com.dlima.myfinancas.api.resource;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -29,7 +32,31 @@ public class LancamentoResource {
 	
 	@PostMapping
 	public ResponseEntity salvar(@RequestBody LancamentoDTO dto) {
-		return null;
+		try {
+			Lancamento lancamento = converter(dto);
+			lancamento = service.salvar(lancamento);
+			return new ResponseEntity(lancamento, HttpStatus.CREATED);
+		} catch (RegraNegocioException e) {
+			return ResponseEntity.badRequest().body(e.getMessage());
+		}
+	}
+	
+	@PutMapping("{id}")
+	public ResponseEntity atualizar(@PathVariable("id") Long id, @RequestBody LancamentoDTO dto ) {
+		return service.obterPorId(id).map(entidade -> { // entidade encontrado no BD 
+			try {
+				Lancamento lancamento = converter(dto);
+				lancamento.setId(entidade.getId());
+				service.atualizar(lancamento);
+				return ResponseEntity.ok(lancamento);
+			} catch (RegraNegocioException e) {
+				return ResponseEntity.badRequest().body(e.getMessage());
+			}
+		}).orElseGet( 
+			() -> new ResponseEntity(
+				"Lançamento não encontrado na base de dados.", 
+				HttpStatus.BAD_REQUEST
+		));
 	}
 	
 	/* Converter DTO em Lancamento */
