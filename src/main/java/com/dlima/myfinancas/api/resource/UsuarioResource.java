@@ -2,7 +2,6 @@ package com.dlima.myfinancas.api.resource;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,15 +13,14 @@ import com.dlima.myfinancas.exception.RegraNegocioException;
 import com.dlima.myfinancas.model.entity.Usuario;
 import com.dlima.myfinancas.service.UsuarioService;
 
+import lombok.RequiredArgsConstructor;
+
 @RestController
 @RequestMapping("/api/usuarios") // http://localhost:8080/api/usuarios
+@RequiredArgsConstructor
 public class UsuarioResource  /* UsuarioControler */ {
 	
-	private UsuarioService service;
-	
-	public UsuarioResource(UsuarioService service) {
-		this.service = service;
-	}
+	private final UsuarioService service;
 	
 	public ResponseEntity salvar(@RequestBody UsuarioDTO dto) {
 		Usuario usuario = Usuario.builder()
