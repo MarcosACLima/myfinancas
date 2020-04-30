@@ -64,7 +64,7 @@ public class LancamentoResource {
 		));
 	}
 	
-	@DeleteMapping("id")
+	@DeleteMapping("{id}")
 	public ResponseEntity deletar(@PathVariable("id") Long id) {
 		return service.obterPorId(id).map( entidade -> {
 			service.deletar(entidade);
@@ -88,7 +88,7 @@ public class LancamentoResource {
 		lancamentoFiltro.setAno(ano);
 		
 		Optional<Usuario> usuario = usuarioService.obterPorId(idUsuario);
-		if (usuario.isPresent()) {
+		if (!usuario.isPresent()) { // se não estiver presente
 			return ResponseEntity.badRequest().body(
 					"Não foi possível realizar a consulta." +
 					"Usuário não encontrado para o Id informado.");
@@ -115,8 +115,13 @@ public class LancamentoResource {
 		
 		lancamento.setUsuario(usuario);
 		
-		lancamento.setTipo(TipoLancamento.valueOf(dto.getTipo()));
-		lancamento.setStatus(StatusLancamento.valueOf(dto.getStatus()));
+		if (dto.getTipo() != null) {
+			lancamento.setTipo(TipoLancamento.valueOf(dto.getTipo()));
+		}
+		
+		if (dto.getStatus() != null) {
+			lancamento.setStatus(StatusLancamento.valueOf(dto.getStatus()));
+		}
 		
 		return lancamento;
 	}
