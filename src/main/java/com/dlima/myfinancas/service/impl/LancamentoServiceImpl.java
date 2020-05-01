@@ -1,6 +1,7 @@
 package com.dlima.myfinancas.service.impl;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -14,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.dlima.myfinancas.exception.RegraNegocioException;
 import com.dlima.myfinancas.model.entity.Lancamento;
 import com.dlima.myfinancas.model.enums.StatusLancamento;
+import com.dlima.myfinancas.model.enums.TipoLancamento;
 import com.dlima.myfinancas.model.repository.LancamentoRepository;
 import com.dlima.myfinancas.service.LancamentoService;
 
@@ -30,6 +32,8 @@ public class LancamentoServiceImpl implements LancamentoService {
 	@Transactional
 	public Lancamento salvar(Lancamento lancamento) {
 		validar(lancamento);
+		lancamento.setStatus(StatusLancamento.PENDENTE);
+		lancamento.setDataCadastro(LocalDate.now());
 		return repository.save(lancamento);
 	}
 
@@ -38,7 +42,6 @@ public class LancamentoServiceImpl implements LancamentoService {
 	public Lancamento atualizar(Lancamento lancamento) {
 		Objects.requireNonNull(lancamento.getId()); // deve passar um lancamento existente com id
 		validar(lancamento);
-		lancamento.setStatus(StatusLancamento.PENDENTE);
 		return repository.save(lancamento);
 	}
 
@@ -104,6 +107,24 @@ public class LancamentoServiceImpl implements LancamentoService {
 	@Override
 	public Optional<Lancamento> obterPorId(Long id) {
 		return repository.findById(id);
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public BigDecimal obterSaldoPorUsuario(Long id) {
+		
+		BigDecimal receitas = repository.obterSaldoPorTipoLancamentoEUsuario(id, TipoLancamento.RECEITA); 
+		BigDecimal despesas = repository.obterSaldoPorTipoLancamentoEUsuario(id, TipoLancamento.DESPESA);
+		
+		if (receitas == null) {
+			receitas = BigDecimal.ZERO; // valor 0
+		}
+		
+		if (despesas == null) {
+			despesas = BigDecimal.ZERO;
+		}
+		
+		return receitas.subtract(despesas); // receitas - despesas
 	}
 
 }
