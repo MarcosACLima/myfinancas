@@ -1,13 +1,15 @@
 package com.dlima.myfinancas.service;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.assertj.core.api.Assertions;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.data.domain.Example;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -111,5 +113,43 @@ public class LancamentoServiceTest {
 		Mockito.verify(repository, Mockito.never()).delete(lancamento);
 	}
 	
+	@Test
+	public void deveFiltrarLancamentos() {
+		// cenario
+		Lancamento lancamento = LancamentoRepositoryTest.criarLancamento();
+		lancamento.setId(1l);
+		
+		List<Lancamento> lancamentos = Arrays.asList(lancamento);
+		Mockito.when(repository.findAll(Mockito.any(Example.class))).thenReturn(lancamentos);
+		
+		
+		// execucao
+		List<Lancamento> resultado = service.buscar(lancamento);
+		
+		// verificacao
+		Assertions
+			.assertThat(resultado)
+			.isNotEmpty()
+			.hasSize(1) 
+			.contains(lancamento);
+	}
+	
+	@Test
+	public void deveAtualizarOsStatusDeUmLancamento() {
+		// cenario
+		Lancamento lancamento = LancamentoRepositoryTest.criarLancamento();
+		lancamento.setId(1l);
+		lancamento.setStatus(StatusLancamento.PENDENTE);
+		
+		StatusLancamento novoStatus = StatusLancamento.EFETIVADO;
+		Mockito.doReturn(lancamento).when(service).atualizar(lancamento);
+		
+		// execucao 
+		service.atualizarStatus(lancamento, novoStatus);
+		
+		// verificacao
+		Assertions.assertThat(lancamento.getStatus()).isEqualTo(novoStatus);
+		Mockito.verify(service).atualizar(lancamento);
+	}
 
 }
