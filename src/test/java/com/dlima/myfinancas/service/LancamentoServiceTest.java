@@ -2,6 +2,7 @@ package com.dlima.myfinancas.service;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
@@ -150,6 +151,40 @@ public class LancamentoServiceTest {
 		// verificacao
 		Assertions.assertThat(lancamento.getStatus()).isEqualTo(novoStatus);
 		Mockito.verify(service).atualizar(lancamento);
+	}
+
+	@Test
+	public void deveObterUmLancamentoPorId() {
+		// cenario 
+		Long id = 1l;
+		
+		Lancamento lancamento = LancamentoRepositoryTest.criarLancamento();
+		lancamento.setId(id);
+		
+		Mockito.when(repository.findById(id)).thenReturn(Optional.of(lancamento));
+		
+		// execucao
+		Optional<Lancamento> resultado = service.obterPorId(id);
+		
+		// verificacao
+		Assertions.assertThat(resultado.isPresent()).isTrue();
+	}
+	
+	@Test
+	public void deveRetornarVazioQuandoOLancamentoNaoExiste() {
+		// cenario 
+		Long id = 1l;
+		
+		Lancamento lancamento = LancamentoRepositoryTest.criarLancamento();
+		lancamento.setId(id);
+		
+		Mockito.when(repository.findById(id)).thenReturn(Optional.empty());
+		
+		// execucao
+		Optional<Lancamento> resultado = service.obterPorId(id);
+		
+		// verificacao
+		Assertions.assertThat(resultado.isPresent()).isFalse();
 	}
 
 }
